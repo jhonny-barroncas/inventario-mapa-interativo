@@ -61,6 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				equipment: {
+					DEFAULT: 'hsl(var(--equipment))',
+					foreground: 'hsl(var(--equipment-foreground))'
+				},
+				location: {
+					DEFAULT: 'hsl(var(--location))',
+					foreground: 'hsl(var(--location-foreground))'
+				},
+				connection: 'hsl(var(--connection))',
+				status: {
+					online: 'hsl(var(--status-online))',
+					offline: 'hsl(var(--status-offline))',
+					maintenance: 'hsl(var(--status-maintenance))'
 				}
 			},
 			borderRadius: {
