@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Monitor, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useInventoryData } from '@/hooks/useInventoryData';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -35,8 +36,12 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
     license: '',
     contact: '',
     responsible: '',
+    locationId: '',
+    parentLocationId: '',
   });
   const { toast } = useToast();
+  const { addEquipment, addLocation, getAvailableLocations } = useInventoryData();
+  const availableLocations = getAvailableLocations();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,24 +55,55 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
       return;
     }
 
+    if (itemType === 'equipment' && !formData.locationId) {
+      toast({
+        title: "Erro",
+        description: "Localidade é obrigatória para equipamentos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const position = { 
+      x: Math.random() * 400 + 200, 
+      y: Math.random() * 400 + 200 
+    };
+
+    let storedItem;
+    if (itemType === 'equipment') {
+      storedItem = addEquipment({
+        label: formData.label,
+        status: formData.status as 'online' | 'offline' | 'maintenance',
+        license: formData.license,
+        contact: formData.contact,
+        locationId: formData.locationId,
+        position,
+      });
+    } else {
+      storedItem = addLocation({
+        label: formData.label,
+        responsible: formData.responsible,
+        status: formData.status === 'online' ? 'active' : 'inactive',
+        parentLocationId: formData.parentLocationId || undefined,
+        position,
+      });
+    }
+
     const newItem = {
-      id: `${itemType}-${Date.now()}`,
+      id: storedItem.id,
       type: itemType,
-      position: { 
-        x: Math.random() * 400 + 200, 
-        y: Math.random() * 400 + 200 
-      },
+      position,
       data: itemType === 'equipment' 
         ? {
-            label: formData.label,
-            status: formData.status as 'online' | 'offline' | 'maintenance',
-            license: formData.license,
-            contact: formData.contact,
+            label: storedItem.label,
+            status: storedItem.status,
+            license: storedItem.license,
+            contact: storedItem.contact,
           }
         : {
-            label: formData.label,
-            responsible: formData.responsible,
-            status: formData.status === 'online' ? 'active' : 'inactive',
+            label: storedItem.label,
+            responsible: storedItem.responsible,
+            status: storedItem.status,
           }
     };
 
@@ -80,6 +116,8 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
       license: '',
       contact: '',
       responsible: '',
+      locationId: '',
+      parentLocationId: '',
     });
     
     toast({
@@ -155,6 +193,22 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
           {itemType === 'equipment' ? (
             <>
               <div className="space-y-2">
+                <Label htmlFor="locationId">Localidade *</Label>
+                <Select value={formData.locationId} onValueChange={(value) => setFormData({ ...formData, locationId: value })}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Selecione a localidade" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    {availableLocations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="license">Licença</Label>
                 <Input
                   id="license"
@@ -176,16 +230,35 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
               </div>
             </>
           ) : (
-            <div className="space-y-2">
-              <Label htmlFor="responsible">Responsável</Label>
-              <Input
-                id="responsible"
-                value={formData.responsible}
-                onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
-                placeholder="Nome do responsável"
-                className="bg-background border-border"
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="responsible">Responsável</Label>
+                <Input
+                  id="responsible"
+                  value={formData.responsible}
+                  onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
+                  placeholder="Nome do responsável"
+                  className="bg-background border-border"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="parentLocationId">Localidade Pai (Opcional)</Label>
+                <Select value={formData.parentLocationId} onValueChange={(value) => setFormData({ ...formData, parentLocationId: value })}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Selecione localidade pai" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {availableLocations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
 
           <DialogFooter>

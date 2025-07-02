@@ -16,19 +16,23 @@ import EquipmentNode from './EquipmentNode';
 import LocationNode from './LocationNode';
 import Legend from './Legend';
 import AddItemButton from './AddItemButton';
+import ExportButton from './ExportButton';
 import { initialNodes, initialEdges } from './data/inventoryData';
 import { EquipmentData } from './EquipmentNode';
 import { LocationData } from './LocationNode';
+import { useInventoryData } from '@/hooks/useInventoryData';
 
 const InventoryMap = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { updateEquipment, updateLocation, deleteEquipment, deleteLocation } = useInventoryData();
 
   // Custom node components with access to state
   const CustomEquipmentNode = useCallback((props: any) => (
     <EquipmentNode
       {...props}
       onUpdate={(data: EquipmentData) => {
+        updateEquipment(props.id, data as any);
         setNodes((nds) =>
           nds.map((node) =>
             node.id === props.id ? { ...node, data: data as any } : node
@@ -36,6 +40,7 @@ const InventoryMap = () => {
         );
       }}
       onDelete={() => {
+        deleteEquipment(props.id);
         setNodes((nds) => nds.filter((node) => node.id !== props.id));
         setEdges((eds) => eds.filter((edge) => 
           edge.source !== props.id && edge.target !== props.id
@@ -48,6 +53,7 @@ const InventoryMap = () => {
     <LocationNode
       {...props}
       onUpdate={(data: LocationData) => {
+        updateLocation(props.id, data as any);
         setNodes((nds) =>
           nds.map((node) =>
             node.id === props.id ? { ...node, data: data as any } : node
@@ -55,6 +61,7 @@ const InventoryMap = () => {
         );
       }}
       onDelete={() => {
+        deleteLocation(props.id);
         setNodes((nds) => nds.filter((node) => node.id !== props.id));
         setEdges((eds) => eds.filter((edge) => 
           edge.source !== props.id && edge.target !== props.id
@@ -98,6 +105,7 @@ const InventoryMap = () => {
         <Controls className="bg-card border-border" />
       </ReactFlow>
       <Legend />
+      <ExportButton />
       <AddItemButton onAdd={handleAddItem} />
     </div>
   );
