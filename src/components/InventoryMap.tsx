@@ -81,8 +81,30 @@ const InventoryMap = () => {
   );
 
   const handleAddItem = useCallback((newItem: Node) => {
+    console.log("Adding new item to React Flow:", JSON.stringify(newItem, null, 2));
     setNodes((nds) => [...nds, newItem]);
-  }, [setNodes]);
+
+    // Auto-connect equipment to its location or location to its parent
+    if (newItem.type === 'equipment' && newItem.data.locationId) {
+      const newEdge: Edge = {
+        id: `e-${newItem.id}-${newItem.data.locationId}`,
+        source: newItem.data.locationId, // Source is the location
+        target: newItem.id, // Target is the new equipment
+        type: 'smoothstep',
+        animated: true,
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
+    } else if (newItem.type === 'location' && newItem.data.parentLocationId) {
+      const newEdge: Edge = {
+        id: `e-${newItem.id}-${newItem.data.parentLocationId}`,
+        source: newItem.data.parentLocationId, // Source is the parent location
+        target: newItem.id, // Target is the new location
+        type: 'smoothstep',
+        animated: true,
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
+    }
+  }, [setNodes, setEdges]);
 
   return (
     <div className="w-full h-screen bg-background relative">

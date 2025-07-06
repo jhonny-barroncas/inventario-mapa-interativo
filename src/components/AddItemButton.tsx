@@ -99,11 +99,13 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
             status: storedItem.status,
             license: storedItem.license,
             contact: storedItem.contact,
+            locationId: storedItem.locationId, // Pass locationId for edge creation
           }
         : {
             label: storedItem.label,
             responsible: storedItem.responsible,
             status: storedItem.status,
+            parentLocationId: storedItem.parentLocationId, // Pass parentLocationId for edge creation
           }
     };
 
