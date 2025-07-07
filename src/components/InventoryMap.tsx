@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   addEdge,
@@ -23,9 +23,48 @@ import { LocationData } from './LocationNode';
 import { useInventoryData } from '@/hooks/useInventoryData';
 
 const InventoryMap = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const { data, updateEquipment, updateLocation, deleteEquipment, deleteLocation } = useInventoryData();
+  
+  // Convert inventory data to ReactFlow nodes
+  const inventoryNodes: Node[] = useMemo(() => {
+    const equipmentNodes: Node[] = data.equipment.map(equipment => ({
+      id: equipment.id,
+      type: 'equipment',
+      position: equipment.position,
+      data: {
+        label: equipment.label,
+        status: equipment.status,
+        license: equipment.license,
+        contact: equipment.contact,
+      }
+    }));
+
+    const locationNodes: Node[] = data.locations.map(location => ({
+      id: location.id,
+      type: 'location',
+      position: location.position,
+      data: {
+        label: location.label,
+        responsible: location.responsible,
+        status: location.status,
+      }
+    }));
+
+    return [...locationNodes, ...equipmentNodes];
+  }, [data]);
+
+  // Use inventory data or fallback to initial nodes if no data exists
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
+    inventoryNodes.length > 0 ? inventoryNodes : initialNodes
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { updateEquipment, updateLocation, deleteEquipment, deleteLocation } = useInventoryData();
+
+  // Update nodes when inventory data changes
+  useEffect(() => {
+    if (inventoryNodes.length > 0) {
+      setNodes(inventoryNodes);
+    }
+  }, [inventoryNodes, setNodes]);
 
   // Custom node components with access to state
   const CustomEquipmentNode = useCallback((props: any) => (
@@ -47,7 +86,7 @@ const InventoryMap = () => {
         ));
       }}
     />
-  ), [setNodes, setEdges]);
+  ), [updateEquipment, deleteEquipment, setNodes, setEdges]);
 
   const CustomLocationNode = useCallback((props: any) => (
     <LocationNode
@@ -68,7 +107,7 @@ const InventoryMap = () => {
         ));
       }}
     />
-  ), [setNodes, setEdges]);
+  ), [updateLocation, deleteLocation, setNodes, setEdges]);
 
   const nodeTypes = {
     equipment: CustomEquipmentNode,
