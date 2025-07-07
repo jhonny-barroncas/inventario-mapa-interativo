@@ -119,10 +119,6 @@ const InventoryMap = () => {
     [setEdges],
   );
 
-  const handleAddItem = useCallback((newItem: Node) => {
-    setNodes((nds) => [...nds, newItem]);
-  }, [setNodes]);
-
   return (
     <div className="w-full h-screen bg-background relative">
       <ReactFlow
@@ -145,7 +141,7 @@ const InventoryMap = () => {
       </ReactFlow>
       <Legend />
       <ExportButton />
-      <AddItemButton onAdd={handleAddItem} />
+      <AddItemButton />
     </div>
   );
 };
