@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Monitor, Wifi, WifiOff, Wrench, Smartphone, Radio, Computer } from 'lucide-react';
+import { Monitor, Wifi, WifiOff, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EquipmentContextMenu from './EquipmentContextMenu';
 
@@ -9,9 +9,6 @@ export interface EquipmentData {
   status: 'online' | 'offline' | 'maintenance';
   license: string;
   contact: string;
-  icon_type?: 'linux' | 'windows' | 'pc' | 'mobile' | 'antenna' | 'custom';
-  custom_icon_url?: string;
-  location_id?: string;
 }
 
 interface EquipmentNodeProps {
@@ -34,33 +31,6 @@ const EquipmentNode = memo(({ data, selected, onUpdate, onDelete }: EquipmentNod
         return <Wrench className="w-4 h-4 text-status-maintenance" />;
       default:
         return <Monitor className="w-4 h-4" />;
-    }
-  };
-
-  const getEquipmentIcon = () => {
-    const iconClass = "w-8 h-8 text-equipment-foreground";
-    
-    if (data.icon_type === 'custom' && data.custom_icon_url) {
-      return (
-        <img 
-          src={data.custom_icon_url} 
-          alt="Custom icon" 
-          className="w-8 h-8 object-contain"
-        />
-      );
-    }
-
-    switch (data.icon_type) {
-      case 'linux':
-        return <Computer className={iconClass} />;
-      case 'windows':
-        return <Monitor className={iconClass} />;
-      case 'mobile':
-        return <Smartphone className={iconClass} />;
-      case 'antenna':
-        return <Radio className={iconClass} />;
-      default:
-        return <Monitor className={iconClass} />;
     }
   };
 
@@ -100,7 +70,7 @@ const EquipmentNode = memo(({ data, selected, onUpdate, onDelete }: EquipmentNod
             selected && "ring-4 ring-ring ring-offset-2"
           )}
         >
-          {getEquipmentIcon()}
+          <Monitor className="w-8 h-8 text-equipment-foreground" />
         </div>
 
         {showTooltip && (
