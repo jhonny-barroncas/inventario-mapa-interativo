@@ -53,16 +53,17 @@ const InventoryMap = () => {
     return [...locationNodes, ...equipmentNodes];
   }, [data]);
 
-  // Use inventory data or fallback to initial nodes if no data exists
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
-    inventoryNodes.length > 0 ? inventoryNodes : initialNodes
-  );
+  // Use ReactFlow state for nodes and edges
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Update nodes when inventory data changes
   useEffect(() => {
     if (inventoryNodes.length > 0) {
       setNodes(inventoryNodes);
+    } else {
+      // Fallback to initial nodes if no inventory data exists
+      setNodes(initialNodes);
     }
   }, [inventoryNodes, setNodes]);
 
