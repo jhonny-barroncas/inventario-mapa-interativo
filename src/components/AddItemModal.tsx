@@ -78,7 +78,7 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           label,
           responsible,
           status: status === 'online' ? 'active' : 'inactive',
-          parentLocationId: parentLocationId || undefined,
+          parentLocationId: parentLocationId === 'none' ? undefined : parentLocationId || undefined,
           position,
         });
       }
@@ -214,7 +214,7 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                     <SelectValue placeholder="Selecione localidade pai" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
+                    <SelectItem value="none">Nenhuma</SelectItem>
                     {availableLocations.map((location) => (
                       <SelectItem key={location.id} value={location.id}>
                         {location.label}
