@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      equipment: {
+        Row: {
+          contact: string | null
+          created_at: string
+          custom_icon_url: string | null
+          icon_type: Database["public"]["Enums"]["equipment_icon"]
+          id: string
+          label: string
+          license: string | null
+          location_id: string | null
+          position_x: number
+          position_y: number
+          status: Database["public"]["Enums"]["equipment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          custom_icon_url?: string | null
+          icon_type?: Database["public"]["Enums"]["equipment_icon"]
+          id?: string
+          label: string
+          license?: string | null
+          location_id?: string | null
+          position_x: number
+          position_y: number
+          status?: Database["public"]["Enums"]["equipment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          custom_icon_url?: string | null
+          icon_type?: Database["public"]["Enums"]["equipment_icon"]
+          id?: string
+          label?: string
+          license?: string | null
+          location_id?: string | null
+          position_x?: number
+          position_y?: number
+          status?: Database["public"]["Enums"]["equipment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          position_x: number
+          position_y: number
+          responsible: string | null
+          status: Database["public"]["Enums"]["location_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          position_x: number
+          position_y: number
+          responsible?: string | null
+          status?: Database["public"]["Enums"]["location_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          position_x?: number
+          position_y?: number
+          responsible?: string | null
+          status?: Database["public"]["Enums"]["location_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +114,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      equipment_icon:
+        | "linux"
+        | "windows"
+        | "pc"
+        | "mobile"
+        | "antenna"
+        | "custom"
+      equipment_status: "online" | "offline" | "maintenance"
+      location_status: "active" | "inactive" | "maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +249,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      equipment_icon: ["linux", "windows", "pc", "mobile", "antenna", "custom"],
+      equipment_status: ["online", "offline", "maintenance"],
+      location_status: ["active", "inactive", "maintenance"],
+    },
   },
 } as const

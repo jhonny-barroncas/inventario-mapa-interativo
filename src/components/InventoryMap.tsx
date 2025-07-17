@@ -20,29 +20,32 @@ import ExportButton from './ExportButton';
 import { initialNodes, initialEdges } from './data/inventoryData';
 import { EquipmentData } from './EquipmentNode';
 import { LocationData } from './LocationNode';
-import { useInventoryData } from '@/hooks/useInventoryData';
+import { useSupabaseInventory } from '@/hooks/useSupabaseInventory';
 
 const InventoryMap = () => {
-  const { data, updateEquipment, updateLocation, deleteEquipment, deleteLocation } = useInventoryData();
+  const { data, loading, updateEquipment, updateLocation, deleteEquipment, deleteLocation } = useSupabaseInventory();
   
   // Convert inventory data to ReactFlow nodes
   const inventoryNodes: Node[] = useMemo(() => {
     const equipmentNodes: Node[] = data.equipment.map(equipment => ({
       id: equipment.id,
       type: 'equipment',
-      position: equipment.position,
+      position: { x: equipment.position_x, y: equipment.position_y },
       data: {
         label: equipment.label,
         status: equipment.status,
         license: equipment.license,
         contact: equipment.contact,
+        icon_type: equipment.icon_type,
+        custom_icon_url: equipment.custom_icon_url,
+        location_id: equipment.location_id,
       }
     }));
 
     const locationNodes: Node[] = data.locations.map(location => ({
       id: location.id,
       type: 'location',
-      position: location.position,
+      position: { x: location.position_x, y: location.position_y },
       data: {
         label: location.label,
         responsible: location.responsible,
@@ -59,25 +62,27 @@ const InventoryMap = () => {
 
   // Update nodes when inventory data changes
   useEffect(() => {
-    if (inventoryNodes.length > 0) {
+    if (!loading) {
       setNodes(inventoryNodes);
-    } else {
-      // Fallback to initial nodes if no inventory data exists
-      setNodes(initialNodes);
     }
-  }, [inventoryNodes, setNodes]);
+  }, [inventoryNodes, setNodes, loading]);
 
   // Custom node components with access to state
   const CustomEquipmentNode = useCallback((props: any) => (
     <EquipmentNode
       {...props}
       onUpdate={(data: EquipmentData) => {
-        updateEquipment(props.id, data as any);
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === props.id ? { ...node, data: data as any } : node
-          )
-        );
+        updateEquipment(props.id, {
+          label: data.label,
+          status: data.status,
+          license: data.license,
+          contact: data.contact,
+          icon_type: (data as any).icon_type,
+          custom_icon_url: (data as any).custom_icon_url,
+          location_id: (data as any).location_id,
+          position_x: props.position.x,
+          position_y: props.position.y,
+        });
       }}
       onDelete={() => {
         deleteEquipment(props.id);
@@ -93,12 +98,13 @@ const InventoryMap = () => {
     <LocationNode
       {...props}
       onUpdate={(data: LocationData) => {
-        updateLocation(props.id, data as any);
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === props.id ? { ...node, data: data as any } : node
-          )
-        );
+        updateLocation(props.id, {
+          label: data.label,
+          responsible: data.responsible,
+          status: data.status,
+          position_x: props.position.x,
+          position_y: props.position.y,
+        });
       }}
       onDelete={() => {
         deleteLocation(props.id);
@@ -119,6 +125,14 @@ const InventoryMap = () => {
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
   );
+
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-lg">Carregando inventário...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen bg-background relative">

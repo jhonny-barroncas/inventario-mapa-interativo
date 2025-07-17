@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Monitor, MapPin } from 'lucide-react';
+import { Monitor, MapPin, Upload, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useInventoryData } from '@/hooks/useInventoryData';
+import { useSupabaseInventory } from '@/hooks/useSupabaseInventory';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -21,10 +21,13 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const [contact, setContact] = useState('');
   const [responsible, setResponsible] = useState('');
   const [locationId, setLocationId] = useState('');
-  const [parentLocationId, setParentLocationId] = useState('');
+  const [iconType, setIconType] = useState<'linux' | 'windows' | 'pc' | 'mobile' | 'antenna' | 'custom'>('pc');
+  const [customIconFile, setCustomIconFile] = useState<File | null>(null);
+  const [customIconPreview, setCustomIconPreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
-  const { addEquipment, addLocation, getAvailableLocations } = useInventoryData();
+  const { addEquipment, addLocation, getAvailableLocations, uploadCustomIcon } = useSupabaseInventory();
   const availableLocations = getAvailableLocations();
 
   const resetForm = () => {
@@ -34,10 +37,24 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     setContact('');
     setResponsible('');
     setLocationId('');
-    setParentLocationId('');
+    setIconType('pc');
+    setCustomIconFile(null);
+    setCustomIconPreview('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleIconFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCustomIconFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCustomIconPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!label.trim()) {
@@ -65,21 +82,33 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
     try {
       if (itemType === 'equipment') {
-        addEquipment({
+        let customIconUrl: string | null = null;
+        
+        if (iconType === 'custom' && customIconFile) {
+          customIconUrl = await uploadCustomIcon(customIconFile);
+          if (!customIconUrl) {
+            return; // Error already shown by uploadCustomIcon
+          }
+        }
+
+        await addEquipment({
           label,
           status: status as 'online' | 'offline' | 'maintenance',
           license,
           contact,
-          locationId,
-          position,
+          icon_type: iconType,
+          custom_icon_url: customIconUrl || undefined,
+          location_id: locationId,
+          position_x: position.x,
+          position_y: position.y,
         });
       } else {
-        addLocation({
+        await addLocation({
           label,
           responsible,
           status: status === 'online' ? 'active' : 'inactive',
-          parentLocationId: parentLocationId === 'none' ? undefined : parentLocationId || undefined,
-          position,
+          position_x: position.x,
+          position_y: position.y,
         });
       }
 
@@ -182,6 +211,52 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   placeholder="email@exemplo.com"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>Tipo de Ícone</Label>
+                <Select value={iconType} onValueChange={(value: any) => setIconType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pc">PC/Computador</SelectItem>
+                    <SelectItem value="windows">Windows</SelectItem>
+                    <SelectItem value="linux">Linux</SelectItem>
+                    <SelectItem value="mobile">Celular</SelectItem>
+                    <SelectItem value="antenna">Antena</SelectItem>
+                    <SelectItem value="custom">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {iconType === 'custom' && (
+                <div className="space-y-2">
+                  <Label>Ícone Personalizado</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {customIconFile ? customIconFile.name : 'Escolher arquivo'}
+                    </Button>
+                    {customIconPreview && (
+                      <div className="w-10 h-10 border border-border rounded-md flex items-center justify-center">
+                        <img src={customIconPreview} alt="Preview" className="w-8 h-8 object-contain" />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIconFileChange}
+                    className="hidden"
+                  />
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -205,23 +280,6 @@ export const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   onChange={(e) => setResponsible(e.target.value)}
                   placeholder="Nome do responsável"
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Localidade Pai (Opcional)</Label>
-                <Select value={parentLocationId} onValueChange={setParentLocationId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione localidade pai" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma</SelectItem>
-                    {availableLocations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </>
           )}
