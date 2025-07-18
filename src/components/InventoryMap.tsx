@@ -4,6 +4,8 @@ import {
   addEdge,
   Background,
   Controls,
+  useNodesState,
+  useEdgesState,
   Connection,
   Edge,
   Node,
@@ -12,69 +14,58 @@ import '@xyflow/react/dist/style.css';
 
 import EquipmentNode from './EquipmentNode';
 import LocationNode from './LocationNode';
-import UnitNode from './UnitNode';
 import Legend from './Legend';
 import AddItemButton from './AddItemButton';
+import { initialNodes, initialEdges } from './data/inventoryData';
 import { EquipmentData } from './EquipmentNode';
 import { LocationData } from './LocationNode';
-import { UnitData } from './UnitNode';
-import useSupabaseInventory from '@/hooks/useSupabaseInventory';
 
 const InventoryMap = () => {
-  const {
-    nodes,
-    edges,
-    loading,
-    setNodes,
-    setEdges,
-    updateNodePosition,
-    updateLocationData,
-    updateUnitData,
-    updateEquipmentData,
-    deleteNode
-  } = useSupabaseInventory();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Custom node components with access to state
   const CustomEquipmentNode = useCallback((props: any) => (
     <EquipmentNode
       {...props}
       onUpdate={(data: EquipmentData) => {
-        updateEquipmentData(props.id, data);
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === props.id ? { ...node, data: data as any } : node
+          )
+        );
       }}
       onDelete={() => {
-        deleteNode(props.id);
+        setNodes((nds) => nds.filter((node) => node.id !== props.id));
+        setEdges((eds) => eds.filter((edge) => 
+          edge.source !== props.id && edge.target !== props.id
+        ));
       }}
     />
-  ), [updateEquipmentData, deleteNode]);
+  ), [setNodes, setEdges]);
 
   const CustomLocationNode = useCallback((props: any) => (
     <LocationNode
       {...props}
       onUpdate={(data: LocationData) => {
-        updateLocationData(props.id, data);
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === props.id ? { ...node, data: data as any } : node
+          )
+        );
       }}
       onDelete={() => {
-        deleteNode(props.id);
+        setNodes((nds) => nds.filter((node) => node.id !== props.id));
+        setEdges((eds) => eds.filter((edge) => 
+          edge.source !== props.id && edge.target !== props.id
+        ));
       }}
     />
-  ), [updateLocationData, deleteNode]);
-
-  const CustomUnitNode = useCallback((props: any) => (
-    <UnitNode
-      {...props}
-      onUpdate={(data: UnitData) => {
-        updateUnitData(props.id, data);
-      }}
-      onDelete={() => {
-        deleteNode(props.id);
-      }}
-    />
-  ), [updateUnitData, deleteNode]);
+  ), [setNodes, setEdges]);
 
   const nodeTypes = {
     equipment: CustomEquipmentNode,
     location: CustomLocationNode,
-    unit: CustomUnitNode,
   };
 
   const onConnect = useCallback(
@@ -82,47 +73,9 @@ const InventoryMap = () => {
     [setEdges],
   );
 
-  const onNodesChange = useCallback((changes: any) => {
-    changes.forEach((change: any) => {
-      if (change.type === 'position' && change.position) {
-        updateNodePosition(change.id, change.position);
-      }
-    });
-    
-    setNodes((nds) => 
-      nds.map((node) => {
-        const change = changes.find((c: any) => c.id === node.id);
-        if (change) {
-          return { ...node, ...change };
-        }
-        return node;
-      })
-    );
-  }, [updateNodePosition, setNodes]);
-
-  const onEdgesChange = useCallback((changes: any) => {
-    setEdges((eds) => 
-      eds.map((edge) => {
-        const change = changes.find((c: any) => c.id === edge.id);
-        if (change) {
-          return { ...edge, ...change };
-        }
-        return edge;
-      })
-    );
-  }, [setEdges]);
-
   const handleAddItem = useCallback((newItem: Node) => {
     setNodes((nds) => [...nds, newItem]);
   }, [setNodes]);
-
-  if (loading) {
-    return (
-      <div className="w-full h-screen bg-background flex items-center justify-center">
-        <div className="text-lg">Carregando...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full h-screen bg-background relative">

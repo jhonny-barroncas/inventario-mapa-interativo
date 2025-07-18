@@ -37,13 +37,11 @@ All colors MUST be HSL.
     --ring: 200 100% 45%;
 
     /* Custom inventory colors */
-    --equipment: 48 89% 85%;
-    --equipment-foreground: 45 85% 35%;
-    --unit: 210 89% 85%;
-    --unit-foreground: 210 85% 35%;
-    --location: 262 90% 80%;
-    --location-foreground: 262 100% 25%;
-    --connection: 217 91% 60%;
+    --equipment: 200 100% 45%;
+    --equipment-foreground: 0 0% 100%;
+    --location: 120 60% 50%;
+    --location-foreground: 0 0% 100%;
+    --connection: 200 80% 60%;
     
     /* Status colors */
     --status-online: 120 60% 50%;
@@ -105,15 +103,6 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
-    /* Custom inventory colors for dark mode */
-    --equipment: 48 89% 25%;
-    --equipment-foreground: 45 85% 75%;
-    --unit: 210 89% 25%;
-    --unit-foreground: 210 85% 75%;
-    --location: 262 90% 25%;
-    --location-foreground: 262 100% 75%;
-    --connection: 217 91% 60%;
   }
 }
 

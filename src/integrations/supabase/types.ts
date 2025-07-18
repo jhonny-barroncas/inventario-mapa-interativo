@@ -27,7 +27,6 @@ export type Database = {
           position_x: number
           position_y: number
           status: Database["public"]["Enums"]["equipment_status"]
-          unit_id: string | null
           updated_at: string
           user_id: string
         }
@@ -43,7 +42,6 @@ export type Database = {
           position_x: number
           position_y: number
           status?: Database["public"]["Enums"]["equipment_status"]
-          unit_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -59,7 +57,6 @@ export type Database = {
           position_x?: number
           position_y?: number
           status?: Database["public"]["Enums"]["equipment_status"]
-          unit_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -69,13 +66,6 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "equipment_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -116,50 +106,6 @@ export type Database = {
         }
         Relationships: []
       }
-      units: {
-        Row: {
-          created_at: string
-          id: string
-          label: string
-          location_id: string | null
-          position_x: number
-          position_y: number
-          responsible: string | null
-          status: Database["public"]["Enums"]["unit_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          label: string
-          location_id?: string | null
-          position_x: number
-          position_y: number
-          responsible?: string | null
-          status?: Database["public"]["Enums"]["unit_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          label?: string
-          location_id?: string | null
-          position_x?: number
-          position_y?: number
-          responsible?: string | null
-          status?: Database["public"]["Enums"]["unit_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "units_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -177,7 +123,6 @@ export type Database = {
         | "custom"
       equipment_status: "online" | "offline" | "maintenance"
       location_status: "active" | "inactive" | "maintenance"
-      unit_status: "active" | "inactive" | "maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -308,7 +253,6 @@ export const Constants = {
       equipment_icon: ["linux", "windows", "pc", "mobile", "antenna", "custom"],
       equipment_status: ["online", "offline", "maintenance"],
       location_status: ["active", "inactive", "maintenance"],
-      unit_status: ["active", "inactive", "maintenance"],
     },
   },
 } as const
